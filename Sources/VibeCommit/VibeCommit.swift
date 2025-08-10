@@ -3,12 +3,15 @@ import ArgumentParser
 
 @main
 struct VibeCommit: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         abstract: "Offline AI Git agent for vibe coding."
     )
 
     @Flag(name: .shortAndLong, help: "Generate AI summary of recent commits.")
     var summarize: Bool = false
+
+    @Flag(name: .shortAndLong, help: "Automatically commit using the generated summary.")
+    var autoCommit: Bool = false
 
     mutating func run() throws {
         guard isGitRepo() else {
@@ -46,22 +49,63 @@ struct VibeCommit: ParsableCommand {
         return output
     }
 
-    // Placeholder for AI summary: Bridge to Python/HF for gpt-oss-20b
+    // AI summary: Bridge to Python/HF for gpt-oss-20b
     func aiSummarize(commits: String) throws -> String {
-        // TODO: Implement real inference. For now, mock or exec Python.
-        // Example: execSync(`python summarize.py "${commits}"`)
-        // Where summarize.py loads model: from transformers import pipeline; summarizer = pipeline('summarization', model='openai/gpt-oss-20b')
-        return "Mock AI Summary: Enhanced features with bug fixes. (Integrate gpt-oss-20b here!)"
+        let scriptPath = "summarize.py"  // Assume in project root or adjust path
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["python", scriptPath]
+
+        let inputPipe = Pipe()
+        process.standardInput = inputPipe
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+
+        try process.run()
+
+        // Write commits to input
+        if let data = commits.data(using: .utf8) {
+            try inputPipe.fileHandleForWriting.write(contentsOf: data)
+        }
+        try inputPipe.fileHandleForWriting.close()
+
+        process.waitUntilExit()
+
+        if process.terminationStatus != 0 {
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorOutput = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+            throw NSError(domain: "AIError", code: Int(process.terminationStatus), userInfo: ["error": errorOutput])
+        }
+
+        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let summary = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            throw NSError(domain: "AIError", code: 1, userInfo: nil)
+        }
+        return summary
     }
 
-    // Vibe check: Simple validation (expand to full agent logic)
+    // Vibe check: Validate and optionally auto-commit
     func vibeCheck(summary: String) throws {
-        // Example: Verify if summary is non-empty and could form a valid commit
-        if summary.isEmpty {
-            print("Vibe check failed: No summary generated.")
+        if summary.count < 20 {
+            print("Vibe check failed: Summary too short—try regenerating.")
+            // TODO: Add retry logic if desired
+            return
+        }
+        print("Vibe check passed: \(summary)")
+
+        if autoCommit {
+            let confirm = readLine(prompt: "Auto-commit with this summary? (y/n): ")
+            if confirm?.lowercased() == "y" {
+                try shell("git add .")
+                try shell("git commit -m '\(summary)'")
+                print("Committed successfully!")
+            } else {
+                print("Auto-commit canceled.")
+            }
         } else {
-            print("Vibe check passed: Ready to commit?")
-            // TODO: Auto-commit option
+            print("Ready to commit manually: git commit -m '\(summary)'")
         }
     }
 
@@ -81,5 +125,13 @@ struct VibeCommit: ParsableCommand {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8) ?? ""
         return output.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+// Extension for readLine with prompt (for confirmation)
+extension String {
+    static func readLine(prompt: String) -> String? {
+        print(prompt, terminator: "")
+        return Swift.readLine()
     }
 }
