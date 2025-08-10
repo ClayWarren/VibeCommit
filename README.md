@@ -2,7 +2,7 @@
 
 Offline AI agent for Git workflows—voice-dictated commits, smart summaries, and agentic checks. Built in Swift for macOS devs who vibe code without cloud BS.
 
-Inspired by agentic engineering (shoutout to @steipete's threads): No more stalled prompts or manual loops. Just dictate "Commit vibe: fixed auth bug," and it generates summaries with local gpt-oss-20b, verifies diffs, and pushes if ready.
+Inspired by agentic engineering: No more stalled prompts or manual loops. Just dictate "Commit vibe: fixed auth bug," and it generates summaries with local gpt-oss-20b, verifies diffs, and pushes if ready.
 
 ## ✨ Features (MVP)
 - 📝 Auto-generate commit messages from diffs using local AI (gpt-oss-20b).
