@@ -8,7 +8,7 @@ Inspired by agentic engineering (shoutout to @steipete's threads): No more stall
 - 📝 Auto-generate commit messages from diffs using local AI (gpt-oss-20b).
 - 🔍 Vibe checks: Ensures tasks complete (e.g., "Did I write code? Verify output").
 - 🎤 Voice dictation integration (coming soon: Wispr Flow or macOS native).
-- ⚙️ Extensible for Peekaboo diffs or Poltergeist rebuilds.
+- ⚙️ Extensible 
 - Zero config: Runs in any Git repo via CLI.
 
 ## 🚀 Quick Start
@@ -21,7 +21,7 @@ Install gpt-oss-20b separately via Hugging Face for AI features.
 ## 📅 Roadmap
 - Phase 1: Core CLI with Git hooks and basic AI summaries.
 - Phase 2: Voice input and agent completions.
-- Future: Integrations (Peekaboo for visual diffs, MCP for Claude fallback if local fails).
+- Future: Integrations (visual diffs, MCP for Claude fallback if local fails).
 
 Contributions welcome! See Issues for "good first issue" tags.
 
